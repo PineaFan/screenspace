@@ -24,13 +24,14 @@ class Driver:
         self.screenspaceMidpoints = None
         self.screenspaceCenter = None
 
+        self.previousFullCodes = [x for x in screenspace.defaultFullCodes]
 
     def calculate(self, width, height):
         frame = screenspace.getCurrentFrame()
         self.cameraFrame = frame.copy()
         dimensions = manipulation.createImageWithDimensions(width, height)
         handPoints, self.fullHandResults = hands.getHandPoints(frame)
-        self.screenspaceCorners, outputFrame = screenspace.getScreenspacePoints(frame, frame, self.debug)
+        self.screenspaceCorners, outputFrame, self.previousFullCodes = screenspace.getScreenspacePoints(frame, frame, self.debug, self.previousFullCodes)
         self.screenspaceMidpoints, outputFrame = screenspace.getMidpoints(self.screenspaceCorners, frame, self.debug)
         self.warpMatrix = manipulation.generateWarpMatrix(dimensions, self.screenspaceCorners)
         try:

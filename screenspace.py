@@ -1,12 +1,14 @@
 from imutils.video import VideoStream
 import imutils
 import cv2
+import mathutils
 import numpy as np
 
 # Start the video stream
 vs = VideoStream(src=0).start()
 
 screenspaceCorners = [(0, 0), (0, 0), (0, 0), (0, 0)]
+defaultFullCodes = [screenspaceCorners for _ in range(4)]
 
 arucoDict = cv2.aruco.Dictionary_get(cv2.aruco.DICT_5X5_1000)
 arucoParams = cv2.aruco.DetectorParameters_create()
@@ -18,13 +20,36 @@ def getCurrentFrame():
     return frame
 
 
-def getScreenspacePoints(frame, videoFrame, debug) -> list[tuple[int, int]]:
+def make_matrix(v1, v2, v3):
+    a = v2-v1
+    b = v3-v1
+
+    c = a.cross(b)
+    if c.magnitude>0:
+        c = c.normalized()
+    else:
+        return None
+
+    b2 = c.cross(a).normalized()
+    a2 = a.normalized()
+    m = mathutils.Matrix([a2, b2, c]).transposed()
+    s = a.magnitude
+    m *= mathutils.Matrix.Scale(s, 3)
+
+    return m
+
+
+def vectorFrom(p1, p2):
+    return mathutils.Vector((p2[0] - p1[0], p2[1] - p1[1], 0))
+
+
+def getScreenspacePoints(frame, videoFrame, debug, previousFullCodes) -> list[tuple[int, int]]:
     # Detect markers in the frame (Aruco 5x5 1000 0-3)
     (corners, ids, rejected) = cv2.aruco.detectMarkers(frame, arucoDict, parameters=arucoParams)
 
     confirmed = []  # Valid markers visible in the frame
 
-    fullCodes = [[(0, 0), (0, 0), (0, 0), (0, 0)], [(0, 0), (0, 0), (0, 0), (0, 0)], [(0, 0), (0, 0), (0, 0), (0, 0)], [(0, 0), (0, 0), (0, 0), (0, 0)]]
+    fullCodes = [x.copy() for x in defaultFullCodes]
 
     for listID, corner in enumerate(corners[:4]):
         for point in corner:  # for each corner in the list of markers
@@ -39,9 +64,25 @@ def getScreenspacePoints(frame, videoFrame, debug) -> list[tuple[int, int]]:
                     confirmed.append(index)
                 index += 1
 
-    # TODO: maybe add missing points
+    if len(confirmed) == 3:
+        (unknownPoint,) = {0, 1, 2, 3} - set(confirmed)
 
-    return screenspaceCorners, videoFrame
+        v1 = vectorFrom(previousFullCodes[confirmed[0]][confirmed[0]], fullCodes[confirmed[0]][confirmed[0]])
+        v2 = vectorFrom(previousFullCodes[confirmed[1]][confirmed[1]], fullCodes[confirmed[1]][confirmed[1]])
+        v3 = vectorFrom(previousFullCodes[confirmed[2]][confirmed[2]], fullCodes[confirmed[2]][confirmed[2]])
+        matrix = make_matrix(v1, v2, v3)
+        if matrix:
+            print(matrix)
+            pointAsMatrix = mathutils.Matrix(([0, fullCodes[unknownPoint][unknownPoint][0]], [0, fullCodes[unknownPoint][unknownPoint][1]], [0, 0]))
+            finalPoint = matrix @ pointAsMatrix
+            # print(finalPoint)
+            finalPoint 
+            screenspaceCorners[unknownPoint] = (finalPoint[0], finalPoint[1])
+            confirmed.append(unknownPoint)
+            fullCodes[unknownPoint][unknownPoint] = finalPoint
+
+
+    return screenspaceCorners, videoFrame, fullCodes
 
 
 def addScreenspaceOverlay(frame, screenspaceCorners, debug=False):

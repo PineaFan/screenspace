@@ -1,0 +1,17 @@
+{
+    "cSpell.ignoreWords": [
+        "Aruco",
+        "Normalised",
+        "Videospace",
+        "as",
+        "dtype",
+        "imshow",
+        "imutils",
+        "linalg",
+        "mathutils",
+        "screenspace"
+    ],
+    "cSpell.words": [
+        "colour"
+    ]
+}
