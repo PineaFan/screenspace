@@ -1,7 +1,6 @@
 from imutils.video import VideoStream
 import imutils
 import cv2
-import mathutils
 import numpy as np
 
 # Start the video stream
@@ -19,28 +18,8 @@ def getCurrentFrame():
     # frame = imutils.resize(frame, width=1000)
     return frame
 
-
-def make_matrix(v1, v2, v3):
-    a = v2-v1
-    b = v3-v1
-
-    c = a.cross(b)
-    if c.magnitude>0:
-        c = c.normalized()
-    else:
-        return None
-
-    b2 = c.cross(a).normalized()
-    a2 = a.normalized()
-    m = mathutils.Matrix([a2, b2, c]).transposed()
-    s = a.magnitude
-    m *= mathutils.Matrix.Scale(s, 3)
-
-    return m
-
-
 def vectorFrom(p1, p2):
-    return mathutils.Vector((p2[0] - p1[0], p2[1] - p1[1], 0))
+    return [p2[0] - p1[0], p2[1] - p1[1]]
 
 
 def getScreenspacePoints(frame, videoFrame, debug, previousFullCodes) -> list[tuple[int, int]]:
@@ -58,28 +37,24 @@ def getScreenspacePoints(frame, videoFrame, debug, previousFullCodes) -> list[tu
                 fullCodes[listID][index] = (x, y)
                 if debug:
                     cv2.circle(videoFrame, (int(x), int(y)), 5, (0, 0, 255), -1)  # Highlight it if debug is enabled
-                if index == ids[listID][0]:  # If the point matches the position of the code
+                if index == ids[listID][0] and (x, y) != (0.0, 0.0):  # If the point matches the position of the code
                     # E.G. If the marker is in the top left, this checks for the top left corner of the marker
                     screenspaceCorners[index] = (x, y)  # Save it for future frames (used if the marker is lost)
                     confirmed.append(index)
                 index += 1
 
-    if len(confirmed) == 3:
+    print(screenspaceCorners)
+    if len(confirmed) == 3 and previousFullCodes != defaultFullCodes:
         (unknownPoint,) = {0, 1, 2, 3} - set(confirmed)
-
-        v1 = vectorFrom(previousFullCodes[confirmed[0]][confirmed[0]], fullCodes[confirmed[0]][confirmed[0]])
-        v2 = vectorFrom(previousFullCodes[confirmed[1]][confirmed[1]], fullCodes[confirmed[1]][confirmed[1]])
-        v3 = vectorFrom(previousFullCodes[confirmed[2]][confirmed[2]], fullCodes[confirmed[2]][confirmed[2]])
-        matrix = make_matrix(v1, v2, v3)
-        if matrix:
-            print(matrix)
-            pointAsMatrix = mathutils.Matrix(([0, fullCodes[unknownPoint][unknownPoint][0]], [0, fullCodes[unknownPoint][unknownPoint][1]], [0, 0]))
-            finalPoint = matrix @ pointAsMatrix
-            # print(finalPoint)
-            finalPoint 
-            screenspaceCorners[unknownPoint] = (finalPoint[0], finalPoint[1])
-            confirmed.append(unknownPoint)
-            fullCodes[unknownPoint][unknownPoint] = finalPoint
+        # Create a matrix that transforms the previous points to the current points
+        transformMatrix = cv2.getAffineTransform(np.float32([previousFullCodes[confirmed[0]][confirmed[0]], previousFullCodes[confirmed[1]][confirmed[1]], previousFullCodes[confirmed[2]][confirmed[2]]]), np.float32([fullCodes[confirmed[0]][confirmed[0]], fullCodes[confirmed[1]][confirmed[1]], fullCodes[confirmed[2]][confirmed[2]]]))
+        # The previous full code is an array of coordinates, so we need to multiply the matrix by each coordinate
+        new = []
+        for point in previousFullCodes[unknownPoint]:
+            new.append(list(transformMatrix @ np.array([point[0], point[1], 1])))
+            # Use matmul instead
+            new.append([max(round(n, 1), 0) for n in list(transformMatrix @ np.array([point[0], point[1], 1]))])
+        screenspaceCorners[unknownPoint] = new[unknownPoint]
 
 
     return screenspaceCorners, videoFrame, fullCodes
