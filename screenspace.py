@@ -18,6 +18,7 @@ def getCurrentFrame():
     # frame = imutils.resize(frame, width=1000)
     return frame
 
+
 def vectorFrom(p1, p2):
     return [p2[0] - p1[0], p2[1] - p1[1]]
 
@@ -43,8 +44,7 @@ def getScreenspacePoints(frame, videoFrame, debug, previousFullCodes) -> list[tu
                     confirmed.append(index)
                 index += 1
 
-    print(screenspaceCorners)
-    if len(confirmed) == 3 and previousFullCodes != defaultFullCodes:
+    if len(confirmed) == 3 and previousFullCodes != defaultFullCodes and debug:
         (unknownPoint,) = {0, 1, 2, 3} - set(confirmed)
         # Create a matrix that transforms the previous points to the current points
         transformMatrix = cv2.getAffineTransform(np.float32([previousFullCodes[confirmed[0]][confirmed[0]], previousFullCodes[confirmed[1]][confirmed[1]], previousFullCodes[confirmed[2]][confirmed[2]]]), np.float32([fullCodes[confirmed[0]][confirmed[0]], fullCodes[confirmed[1]][confirmed[1]], fullCodes[confirmed[2]][confirmed[2]]]))

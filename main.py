@@ -2,13 +2,12 @@ from driver import Driver
 import cv2
 import numpy as np
 
-driver = Driver(debug=True, modules=["hands"])
-# background = np.zeros([1, 1, 1], dtype=np.uint8)
-# background.fill((255, 0, 0))
-# background = cv2.cvtColor(background, cv2.COLOR_GRAY2RGB)
+driver = Driver(debug=False, modules=["hands"])
 # Create a red image
 background = np.zeros((150, 300, 3), np.uint8)
-background[:] = (0, 0, 0)
+# background[:] = (255, 0, 255)  # Magenta
+# background[:] = (0, 0, 0)  # Black (transparent)
+background[:] = (120, 120, 242)  # Red
 
 debug = False
 
@@ -16,6 +15,13 @@ x = 0
 while True:
     frame = background.copy()
     driver.calculate(background.shape[1], background.shape[0])
+
+    if driver.screenspaceHandPoints:
+        toRender = [4, 8, 12, 16, 20]
+        for x in driver.screenspaceHandPoints:
+            for i in toRender:
+                point = x[i]
+                cv2.circle(frame, (round(point[0]), round(point[1])), 5, (0, 255, 0), -1)
 
     if debug:
         frame = cv2.resize(frame, (1500, 1000))

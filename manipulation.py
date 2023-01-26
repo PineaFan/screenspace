@@ -31,7 +31,7 @@ def findNewCoordinate(point, warpMatrix):
     newPoint = np.matmul(warpMatrix, point)
     if newPoint[2] != 0:
         newPoint = newPoint / newPoint[2]
-    return newPoint
+    return (newPoint[0], newPoint[1])
 
 
 def warpImage(image, warpMatrix, dimensions, fitOption: OverlayOptions = OverlayOptions.STRETCH):

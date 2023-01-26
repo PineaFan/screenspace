@@ -5,7 +5,7 @@ import numpy as np
 maxBounceAngle = 60
 maxBallSpeed = 10
 
-driver = Driver(debug=True, modules=["hands"])
+driver = Driver(debug=False, modules=["hands"])
 background = np.zeros([1, 1, 1], dtype=np.uint8)
 background.fill(255)
 background = cv2.cvtColor(background, cv2.COLOR_GRAY2RGB)
@@ -34,16 +34,16 @@ class Ball:
         for paddle in paddles:
             # Check if the ball is colliding with the paddle
             if self.x + self.radius > paddle.corners[0][0] and \
-               self.x - self.radius < paddle.corners[1][0] and \
-               self.y + self.radius > paddle.corners[0][1] and \
-               self.y - self.radius < paddle.corners[1][1] and \
-               self.collisionEnabled:
+                self.x - self.radius < paddle.corners[1][0] and \
+                self.y + self.radius > paddle.corners[0][1] and \
+                self.y - self.radius < paddle.corners[1][1] and \
+                self.collisionEnabled:
                 relativeIntersectY = (paddle.y + (paddle.height // 2)) - self.y
                 normalizedRelativeIntersectionY = (relativeIntersectY / paddle.height)
                 bounceAngle = normalizedRelativeIntersectionY * maxBounceAngle
                 print(relativeIntersectY, normalizedRelativeIntersectionY, bounceAngle)
                 self.vx = np.sin(bounceAngle)
-                self.vy = np.cos(bounceAngle) * -1
+                self.vy = np.cos(bounceAngle)
                 self.collisionEnabled = False
                 self.speed = min(max(self.speed + 1, 2), maxBallSpeed)
         if self.x + self.radius > paddles[0].x + paddles[0].width and self.x + self.radius < paddles[1].x:
@@ -84,11 +84,11 @@ while True:
         ball.start()
     # Show point 8 from the screenspace hand points
     if driver.screenspaceHandPoints:
-        point = driver.screenspaceHandPoints[8]
-        for paddle in paddles:
-            if paddle:
-                paddle.update(round(point[1] - paddle.height // 2))
-            cv2.rectangle(frame, *paddle.corners, (0, 0, 255), -1)
+        for i, hand in enumerate(driver.screenspaceHandPoints):
+            point = hand[8]
+            if i < len(paddles):
+                paddles[i].update(round(point[1] - paddles[i].height // 2))
+                cv2.rectangle(frame, *paddles[i].corners, (0, 0, 255), -1)
 
     cv2.circle(frame, (ball.x, ball.y), ball.radius, (0, 0, 255), -1)
 

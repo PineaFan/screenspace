@@ -5,9 +5,9 @@ from mpl_toolkits.mplot3d.art3d import Poly3DCollection
 mpHands = mp.solutions.hands
 hands = mpHands.Hands(
     static_image_mode=False,
-    max_num_hands=2,
+    max_num_hands=4,
     min_detection_confidence=0.3,
-    min_tracking_confidence=0.3
+    min_tracking_confidence=0.1
 )
 mpDraw = mp.solutions.drawing_utils
 
@@ -31,7 +31,7 @@ def getHandPoints(frame):
     results = hands.process(imgRGB)
     landmarks = results.multi_hand_landmarks
     if landmarks:
-        return landmarks[0].landmark, results
+        return landmarks, results
     return landmarks, results
 
 
@@ -46,5 +46,5 @@ def toVideospaceCoords(landmarks, width, height):
     for landmark in landmarks:
         x = int((landmark.x) * width)
         y = int((landmark.y) * height)
-        output.append([x, y])
+        output.append((x, y))
     return output
