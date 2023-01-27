@@ -1,8 +1,9 @@
 from driver import Driver
 import cv2
+import matplotlib.pyplot as plt
 import numpy as np
 
-driver = Driver(debug=False, modules=["hands"])
+driver = Driver(debug=True, modules=["hands"])
 # Create a red image
 background = np.zeros((150, 300, 3), np.uint8)
 # background[:] = (255, 0, 255)  # Magenta
@@ -10,6 +11,9 @@ background = np.zeros((150, 300, 3), np.uint8)
 background[:] = (120, 120, 242)  # Red
 
 debug = False
+
+fig = plt.figure()
+ax = fig.add_subplot(projection='3d')
 
 x = 0
 while True:
@@ -19,7 +23,7 @@ while True:
     if driver.screenspaceHandPoints:
         toRender = [4, 8, 12, 16, 20]
         for x in driver.screenspaceHandPoints:
-            for i in toRender:
+            for i in [n for n in toRender if n < len(x)]:
                 point = x[i]
                 cv2.circle(frame, (round(point[0]), round(point[1])), 5, (0, 255, 0), -1)
 
