@@ -1,3 +1,7 @@
+"""
+This is an example project - It doesn't work well, but shows what the driver can do, and how the hand tracking works
+"""
+
 from driver import Driver
 import cv2
 import numpy as np
@@ -6,12 +10,11 @@ maxBounceAngle = 60
 maxBallSpeed = 10
 
 driver = Driver(debug=False, modules=["hands"])
-background = np.zeros([1, 1, 1], dtype=np.uint8)
-background.fill(255)
-background = cv2.cvtColor(background, cv2.COLOR_GRAY2RGB)
-background = cv2.resize(background, (300, 150))
+background = np.zeros((150, 300, 3), np.uint8)  # Create a white 150x300 image for the background
+background[:] = (255, 255, 255)
 
 debug = False
+
 
 class Ball:
     def __init__(self):

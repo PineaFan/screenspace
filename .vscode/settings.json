@@ -12,6 +12,17 @@
         "screenspace"
     ],
     "cSpell.words": [
-        "colour"
+        "colour",
+        "colours",
+        "labelsize",
+        "matplotlib",
+        "pyplot",
+        "xaxis",
+        "xlabel",
+        "xlim",
+        "yaxis",
+        "ylabel",
+        "zaxis",
+        "zlabel"
     ]
 }

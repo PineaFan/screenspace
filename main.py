@@ -1,6 +1,5 @@
 from driver import Driver
 import cv2
-import matplotlib.pyplot as plt
 import numpy as np
 
 driver = Driver(debug=True, modules=["hands"])
@@ -11,9 +10,6 @@ background = np.zeros((150, 300, 3), np.uint8)
 background[:] = (120, 120, 242)  # Red
 
 debug = False
-
-fig = plt.figure()
-ax = fig.add_subplot(projection='3d')
 
 x = 0
 while True:

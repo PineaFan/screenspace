@@ -19,6 +19,7 @@ class Driver:
         self.handNormalisedCoordinates = None
         self.screenspaceHandPoints = None
         self.fullHandResults = None
+        self.fullHandLandmarks = None
 
         self.screenspaceCorners = None
         self.screenspaceMidpoints = None
@@ -47,6 +48,7 @@ class Driver:
 
         if "hands" in self.modules:
             handPoints, self.fullHandResults = hands.getHandPoints(frame)
+            self.fullHandLandmarks = handPoints
             outputFrame = hands.renderHandPoints(outputFrame, self.fullHandResults, self.debug)
             screenspaceHandCoords = []
             self.screenspaceHandPoints = []

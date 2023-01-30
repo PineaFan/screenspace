@@ -7,6 +7,7 @@ class OverlayOptions:
 
 
 def generateWarpMatrix(sourceImage, newCorners, fitOption: OverlayOptions = OverlayOptions.STRETCH):
+    # Create a matrix which maps the points of sourceImage to the points of newCorners
     imageCorners = np.array([
         [0, 0],
         [sourceImage.shape[1], 0],
@@ -19,29 +20,30 @@ def generateWarpMatrix(sourceImage, newCorners, fitOption: OverlayOptions = Over
         [newCorners[2][0], newCorners[2][1]],
         [newCorners[3][0], newCorners[3][1]]
     ], dtype="float32")
+    # Create the matrix
     warpMatrix = cv2.getPerspectiveTransform(imageCorners, screenCorners)
     return warpMatrix
 
 
 def findNewCoordinate(point, warpMatrix):
     # Applies the warp matrix to a point
-    # This is used to find the new coordinates of a point in the new image
-
+    # By multiplying the point by the matrix, we can find the new position of the point
     point = np.array([point[0], point[1], 1])
     newPoint = np.matmul(warpMatrix, point)
-    if newPoint[2] != 0:
+    if newPoint[2] != 0:  # Prevent division by 0
         newPoint = newPoint / newPoint[2]
     return (newPoint[0], newPoint[1])
 
 
 def warpImage(image, warpMatrix, dimensions, fitOption: OverlayOptions = OverlayOptions.STRETCH):
+    """
+    Takes an image and a warp matrix and returns the image warped to the new position
+    """
     return cv2.warpPerspective(image, warpMatrix, (dimensions[1], dimensions[0]))
 
 
 def overlayImage(base, overlay, warpMatrix, fitOption: OverlayOptions = OverlayOptions.STRETCH):
     warpedImage = warpImage(overlay, warpMatrix, base.shape[:2])
-    # This relies on the background being pure black. If it isn't, this will not work
-
     # Generate a mask by making every pixel is not transparent pure black
     # This does not work with translucent images
     mask = cv2.cvtColor(warpedImage, cv2.COLOR_BGR2GRAY)
