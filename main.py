@@ -1,13 +1,12 @@
 from driver import Driver
+import hands
 import cv2
 import numpy as np
 
-driver = Driver(debug=True, modules=["hands"])
+driver = Driver(debug=False, modules=["hands"])
 # Create a red image
 background = np.zeros((150, 300, 3), np.uint8)
-# background[:] = (255, 0, 255)  # Magenta
-# background[:] = (0, 0, 0)  # Black (transparent)
-background[:] = (120, 120, 242)  # Red
+background[:] = driver.hex_to_bgr("#F27878")
 
 debug = False
 
@@ -22,7 +21,6 @@ while True:
             for i in [n for n in toRender if n < len(x)]:
                 point = x[i]
                 cv2.circle(frame, (round(point[0]), round(point[1])), 5, (0, 255, 0), -1)
-
     if debug:
         frame = cv2.resize(frame, (1500, 1000))
         cv2.imshow("frame", frame)

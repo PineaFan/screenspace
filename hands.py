@@ -22,6 +22,7 @@ def renderHandPoints(frame, results, debug):
             mpDraw.draw_landmarks(frame, handLms, mpHands.HAND_CONNECTIONS)
     return frame
 
+
 def fromList(l, a):
     return [l[i] for i in a]
 
@@ -48,3 +49,26 @@ def toVideospaceCoords(landmarks, width, height):
         y = int((landmark.y) * height)
         output.append((x, y))
     return output
+
+
+import matplotlib.pyplot as plt
+
+def getExtendedFingers(landmarks):
+    # Each finger is written as points [1,2,3,4], [5,6,7,8] etc
+    landmarks = landmarks.landmark
+    fingers = [landmarks[x:x + 4] for x in range(1, 20, 4)]
+    raised = [False for _ in range(5)]
+    for finger in fingers:
+        # Get the dot product of points 0 and 1 with 2 and 3
+        # If the dot product is negative, the finger is extended
+
+        # Get the vector from 0 to 1
+        vector1 = [finger[1].x - finger[0].x, finger[1].y - finger[0].y, finger[1].z - finger[0].z]
+        # Get the vector from 2 to 3
+        vector2 = [finger[3].x - finger[2].x, finger[3].y - finger[2].y, finger[3].z - finger[2].z]
+        # Get the dot product
+        dotProduct = vector1[0] * vector2[0] + vector1[1] * vector2[1] + vector1[2] * vector2[2]
+        # Set the variable
+        raised[fingers.index(finger)] = dotProduct
+    raised[0] = False
+    return raised

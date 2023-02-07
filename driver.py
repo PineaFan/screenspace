@@ -20,12 +20,18 @@ class Driver:
         self.screenspaceHandPoints = None
         self.fullHandResults = None
         self.fullHandLandmarks = None
+        self.raisedFingers = []
 
         self.screenspaceCorners = None
         self.screenspaceMidpoints = None
         self.screenspaceCenter = None
 
         self.previousFullCodes = [x for x in screenspace.defaultFullCodes]
+
+    def hex_to_bgr(self, hex):
+        hex = hex.lstrip('#')
+        hlen = len(hex)
+        return tuple(reversed([int(hex[i:i+hlen//3], 16) for i in range(0, hlen, hlen//3)]))
 
     def calculate(self, width, height):
         frame = screenspace.getCurrentFrame()
@@ -53,6 +59,7 @@ class Driver:
             screenspaceHandCoords = []
             self.screenspaceHandPoints = []
             if handPoints:
+                self.raisedFingers = [hands.getExtendedFingers(hp) for hp in handPoints]
                 self.handVideoCoordinates = [hands.toVideospaceCoords(h.landmark, outputFrame.shape[1], outputFrame.shape[0]) for h in handPoints]
                 # To work out positions on screen, multiply by the warp matrix
                 self.handNormalisedCoordinates = []
