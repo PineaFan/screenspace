@@ -2,9 +2,9 @@
 This is an example project - It doesn't work well, but shows what the driver can do, and how the hand tracking works
 """
 
-from driver import Driver
 import cv2
 import numpy as np
+from driver import Driver
 
 maxBounceAngle = 60
 maxBallSpeed = 10

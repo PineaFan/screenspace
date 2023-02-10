@@ -1,14 +1,17 @@
-import screenspace
-import hands
 import body
-import manipulation
 import cv2
+import hands
+import manipulation
 import numpy as np
+
+import screenspace
 
 
 class Driver:
-    def __init__(self, debug=False, modules=[]):
+    def __init__(self, debug=False, modules=[], flip_horizontal: bool = False, flip_vertical: bool = False):
         self.modules = modules
+        self.flip_horizontal = flip_horizontal
+        self.flip_vertical = flip_vertical
 
         self.cameraFrame = None
         self.currentFrame = None
@@ -90,9 +93,11 @@ class Driver:
         outputFrame = cv2.resize(outputFrame, (1000, round(1000 * outputFrame.shape[0] / outputFrame.shape[1])))
 
         # Flip the frame horizontally
-        # outputFrame = cv2.flip(outputFrame, 1)
+        if self.flip_horizontal:
+            outputFrame = cv2.flip(outputFrame, 1)
         # Flip the frame vertically
-        # outputFrame = cv2.flip(outputFrame, 0)
+        if self.flip_vertical:
+            outputFrame = cv2.flip(outputFrame, 0)
         cv2.waitKey(1)
         cv2.imshow("Output", outputFrame)
 

@@ -1,15 +1,22 @@
-from driver import Driver
-import hands
 import body
-from hands import HandModel, Fist, Spread, Peace, IndexFinger, MiddleFinger, RingFinger, PinkyFinger
 import cv2
+import hands
 import numpy as np
+from driver import Driver
+from hands import (Fist, HandModel, IndexFinger, MiddleFinger, Peace,
+                   PinkyFinger, RingFinger, Spread)
 
-driver = Driver(debug=False, modules=["hands"])
-# Create a red image
-background = np.zeros((150, 300, 3), np.uint8)
-background[:] = driver.hex_to_bgr("#F27878")
+driver = Driver(debug=False, modules=["hands"], flip_horizontal=False, flip_vertical=False)
+# Create a default background
+background = np.zeros((150, 300, 3), np.uint8)  # 300 wide, 150 high, 3 channels (RGB).
+# Translucency is not supported due to masking issues
+# Black is for transparent
+background[:] = driver.hex_to_bgr("#FFFFFF")
+# background[:] = driver.hex_to_bgr("#F27878")
 # background[:] = driver.hex_to_bgr("#000000")
+
+currentDrawing = np.zeros((150, 300, 3), np.uint8)
+currentDrawing[:] = [255, 255, 255]
 
 debug = False
 
@@ -24,6 +31,12 @@ knownHands = []
 x = 0
 while True:
     frame = background.copy()
+    # Overlay the current drawing. Use white areas as a mask
+    mask = cv2.inRange(currentDrawing, (254, 254, 254), (255, 255, 255))
+    # Then overlay everything else. If the mask is white, the pixel is not drawn, otherwise it is in the correct color
+    for i in range(3):
+        frame[:, :, i] = np.where(mask == 255, frame[:, :, i], currentDrawing[:, :, i])
+
     driver.calculate(background.shape[1], background.shape[0])
 
     if driver.screenspaceHandPoints:  # When hands are detected
@@ -33,6 +46,7 @@ while True:
             previousHands = previousHands[:len(driver.screenspaceHandPoints)]
             knownHands = knownHands[:len(driver.screenspaceHandPoints)]
         # Loop over each hand
+        maxHand = 0
         for handID, hand in enumerate(driver.screenspaceHandPoints):
             # If there are less hands than there are in the list, add a default one to the list
             if len(previousHands) <= handID:
@@ -51,12 +65,25 @@ while True:
             # If the hand has been visible for 5 frames, add it to the list of confirmed hands
             if previousHands[handID][-1] > 5:
                 knownHands[handID] = HandModel(previousHands[handID])
+            maxHand = handID
+        knownHands = knownHands[:maxHand + 1]
     # if driver.fullBodyCoordinates:
     #     frame = body.renderBody(frame, driver.bodyCoordinates)
     if any([n == MiddleFinger() for n in knownHands]):
         print("\033[91mMiddle finger detected, exiting")
         import sys
         sys.exit()
+    for hand in knownHands:
+        if hand == IndexFinger():
+            if len(driver.screenspaceHandPoints) > knownHands.index(hand):
+                cv2.circle(currentDrawing, (
+                        round(driver.screenspaceHandPoints[knownHands.index(hand)][8][0]),
+                        round(driver.screenspaceHandPoints[knownHands.index(hand)][8][1])
+                    ),
+                    5,
+                    driver.hex_to_bgr("#020202"), -1
+                )
+                cv2.imshow("currentDrawing", currentDrawing)
     if debug:
         frame = cv2.resize(frame, (1500, 1000))
         cv2.imshow("frame", frame)

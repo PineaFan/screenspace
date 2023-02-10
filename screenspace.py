@@ -1,7 +1,7 @@
-from imutils.video import VideoStream
-import imutils
 import cv2
+import imutils
 import numpy as np
+from imutils.video import VideoStream
 
 # Start the video stream
 vs = VideoStream(src=0).start()

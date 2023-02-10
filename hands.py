@@ -33,7 +33,6 @@ class Peace(HandModel):
 class IndexFinger(HandModel):
     def __init__(self):
         super().__init__([False, True, False, False, False])
-        print(self.thumb, self.index, self.middle, self.ring, self.pinky)
 
 
 class MiddleFinger(HandModel):
@@ -101,6 +100,7 @@ def toVideospaceCoords(landmarks, width, height):
 
 
 import matplotlib.pyplot as plt
+
 
 def getExtendedFingers(landmarks):
     # Each finger is written as points [1,2,3,4], [5,6,7,8] etc
