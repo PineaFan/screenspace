@@ -16,6 +16,8 @@ def getCurrentFrame():
     # Get the video stream from the webcam
     frame = vs.read()
     # frame = imutils.resize(frame, width=1000)
+    # Flip horizontally
+    # frame = cv2.flip(frame, 1)
     return frame
 
 

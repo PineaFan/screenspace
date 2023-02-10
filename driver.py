@@ -1,5 +1,6 @@
 import screenspace
 import hands
+import body
 import manipulation
 import cv2
 import numpy as np
@@ -21,6 +22,10 @@ class Driver:
         self.fullHandResults = None
         self.fullHandLandmarks = None
         self.raisedFingers = []
+
+        self.fullBodyResults = None
+        self.bodyVideoCoordinates = None
+        self.screenspaceBodyPoints = None
 
         self.screenspaceCorners = None
         self.screenspaceMidpoints = None
@@ -72,6 +77,9 @@ class Driver:
                             self.screenspaceHandPoints[-1].append(manipulation.findNewCoordinate(point, self.inverseMatrix))
             outputFrame = hands.renderHandPoints(outputFrame, self.fullHandResults, self.debug)
 
+        if "body" in self.modules:
+            self.fullBodyResults = body.getBodyPoints(frame)
+
         self.currentFrame = outputFrame
 
 
@@ -82,9 +90,9 @@ class Driver:
         outputFrame = cv2.resize(outputFrame, (1000, round(1000 * outputFrame.shape[0] / outputFrame.shape[1])))
 
         # Flip the frame horizontally
-        outputFrame = cv2.flip(outputFrame, 1)
+        # outputFrame = cv2.flip(outputFrame, 1)
         # Flip the frame vertically
-        outputFrame = cv2.flip(outputFrame, 0)
+        # outputFrame = cv2.flip(outputFrame, 0)
         cv2.waitKey(1)
         cv2.imshow("Output", outputFrame)
 

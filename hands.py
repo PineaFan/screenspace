@@ -2,6 +2,55 @@ import cv2
 import mediapipe as mp
 from mpl_toolkits.mplot3d.art3d import Poly3DCollection
 
+
+class HandModel:
+    def __init__(self, handArray):
+        self.thumb = handArray[0]
+        self.index = handArray[1]
+        self.middle = handArray[2]
+        self.ring = handArray[3]
+        self.pinky = handArray[4]
+
+    def __eq__(self, other):
+        return self.thumb == other.thumb and self.index == other.index and self.middle == other.middle and self.ring == other.ring and self.pinky == other.pinky
+
+
+class Fist(HandModel):
+    def __init__(self):
+        super().__init__([False, False, False, False, False])
+
+
+class Spread(HandModel):
+    def __init__(self):
+        super().__init__([True, True, True, True, True])
+
+
+class Peace(HandModel):
+    def __init__(self):
+        super().__init__([True, False, False, False, False])
+
+
+class IndexFinger(HandModel):
+    def __init__(self):
+        super().__init__([False, True, False, False, False])
+        print(self.thumb, self.index, self.middle, self.ring, self.pinky)
+
+
+class MiddleFinger(HandModel):
+    def __init__(self):
+        super().__init__([False, False, True, False, False])
+
+
+class RingFinger(HandModel):
+    def __init__(self):
+        super().__init__([False, False, False, True, False])
+
+
+class PinkyFinger(HandModel):
+    def __init__(self):
+        super().__init__([False, False, False, False, True])
+
+
 mpHands = mp.solutions.hands
 hands = mpHands.Hands(
     static_image_mode=False,
