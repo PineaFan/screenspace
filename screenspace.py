@@ -32,19 +32,28 @@ def getScreenspacePoints(frame, videoFrame, debug, previousFullCodes) -> list[tu
     confirmed = []  # Valid markers visible in the frame
 
     fullCodes = [x.copy() for x in defaultFullCodes]
+    stylusOn = None
+    stylusCorners = []
 
-    for listID, corner in enumerate(corners[:4]):
+    for listID, corner in enumerate(corners[:6]):
         for point in corner:  # for each corner in the list of markers
-            index = 0
-            for x, y in point:
-                fullCodes[listID][index] = (x, y)
-                if debug:
-                    cv2.circle(videoFrame, (int(x), int(y)), 5, (0, 0, 255), -1)  # Highlight it if debug is enabled
-                if index == ids[listID][0] and (x, y) != (0.0, 0.0):  # If the point matches the position of the code
-                    # E.G. If the marker is in the top left, this checks for the top left corner of the marker
-                    screenspaceCorners[index] = (x, y)  # Save it for future frames (used if the marker is lost)
-                    confirmed.append(index)
-                index += 1
+            # Get the id of the marker
+            markerID = ids[listID][0]
+            if markerID in range(4, 5 + 1):
+                for x, y in point:
+                    stylusCorners.append((x, y))
+                stylusOn = markerID == 5
+            elif markerID < 4:
+                index = 0
+                for x, y in point:
+                    fullCodes[markerID][index] = (x, y)
+                    if debug:
+                        cv2.circle(videoFrame, (int(x), int(y)), 5, (0, 0, 255), -1)  # Highlight it if debug is enabled
+                    if index == ids[listID][0] and (x, y) != (0.0, 0.0):  # If the point matches the position of the code
+                        # E.G. If the marker is in the top left, this checks for the top left corner of the marker
+                        screenspaceCorners[index] = (x, y)  # Save it for future frames (used if the marker is lost)
+                        confirmed.append(index)
+                    index += 1
 
     if len(confirmed) == 3 and previousFullCodes != defaultFullCodes and debug:
         (unknownPoint,) = {0, 1, 2, 3} - set(confirmed)
@@ -58,8 +67,7 @@ def getScreenspacePoints(frame, videoFrame, debug, previousFullCodes) -> list[tu
             new.append([max(round(n, 1), 0) for n in list(transformMatrix @ np.array([point[0], point[1], 1]))])
         screenspaceCorners[unknownPoint] = new[unknownPoint]
 
-
-    return screenspaceCorners, videoFrame, fullCodes
+    return screenspaceCorners, videoFrame, fullCodes, stylusCorners, stylusOn
 
 
 def addScreenspaceOverlay(frame, screenspaceCorners, debug=False):

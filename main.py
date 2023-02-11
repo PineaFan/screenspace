@@ -1,4 +1,4 @@
-import body
+# import body
 import cv2
 import hands
 import numpy as np
@@ -6,16 +6,21 @@ from driver import Driver
 from hands import (Fist, HandModel, IndexFinger, MiddleFinger, Peace,
                    PinkyFinger, RingFinger, Spread)
 
+width = 300
+height = 150
+scale = 2
+width, height = width * scale, height * scale
+
 driver = Driver(debug=False, modules=["hands"], flip_horizontal=False, flip_vertical=False)
 # Create a default background
-background = np.zeros((150, 300, 3), np.uint8)  # 300 wide, 150 high, 3 channels (RGB).
+background = np.zeros((height, width, 3), np.uint8)  # 300 wide, 150 high, 3 channels (RGB).
 # Translucency is not supported due to masking issues
 # Black is for transparent
 background[:] = driver.hex_to_bgr("#FFFFFF")
 # background[:] = driver.hex_to_bgr("#F27878")
 # background[:] = driver.hex_to_bgr("#000000")
 
-currentDrawing = np.zeros((150, 300, 3), np.uint8)
+currentDrawing = np.zeros((height, width, 3), np.uint8)
 currentDrawing[:] = [255, 255, 255]
 
 debug = False
@@ -38,8 +43,9 @@ while True:
         frame[:, :, i] = np.where(mask == 255, frame[:, :, i], currentDrawing[:, :, i])
 
     driver.calculate(background.shape[1], background.shape[0])
-
-    if driver.screenspaceHandPoints:  # When hands are detected
+    if driver.stylusCoords is not None:
+        cv2.circle(currentDrawing if driver.stylusDraw else frame, (round(driver.stylusCoords[0]), round(driver.stylusCoords[1])), 3, (255, 0, 255), -1)
+    elif driver.screenspaceHandPoints:  # When hands are detected
         toRender = [4, 8, 12, 16, 20]
         # If there are more hands in the list of previously stored ones than there are hands detected, remove the extra ones
         if len(previousHands) > len(driver.screenspaceHandPoints):

@@ -1,4 +1,4 @@
-import body
+# import body
 import cv2
 import hands
 import manipulation
@@ -18,6 +18,10 @@ class Driver:
         self.debug = debug
         self.warpMatrix = None
         self.inverseMatrix = None
+
+        self.videospaceStylusCoords = []
+        self.stylusCoords = (0, 0)
+        self.stylusDraw = None
 
         self.handVideoCoordinates = None
         self.handNormalisedCoordinates = None
@@ -45,7 +49,7 @@ class Driver:
         frame = screenspace.getCurrentFrame()
         self.cameraFrame = frame.copy()
         dimensions = manipulation.createImageWithDimensions(width, height)
-        self.screenspaceCorners, outputFrame, self.previousFullCodes = screenspace.getScreenspacePoints(frame, frame, self.debug, self.previousFullCodes)
+        self.screenspaceCorners, outputFrame, self.previousFullCodes, self.videospaceStylusCoords, self.stylusDraw = screenspace.getScreenspacePoints(frame, frame, self.debug, self.previousFullCodes)
         self.screenspaceMidpoints, outputFrame = screenspace.getMidpoints(self.screenspaceCorners, frame, self.debug)
         self.warpMatrix = manipulation.generateWarpMatrix(dimensions, self.screenspaceCorners)
 
@@ -57,6 +61,12 @@ class Driver:
         centerX, centerY = frame.shape[1] // 2, frame.shape[0] // 2
         centerWarpMatrix = manipulation.generateWarpMatrix(frame, self.screenspaceCorners)
         self.screenspaceCenter = manipulation.findNewCoordinate((centerX, centerY), centerWarpMatrix)
+        if len(self.videospaceStylusCoords):
+            newCoords = [manipulation.findNewCoordinate(c, self.warpMatrix) for c in self.videospaceStylusCoords]
+            # Find the midpoint
+            self.stylusCoords = (round((newCoords[0][0] + newCoords[1][0]) / 2), round((newCoords[0][1] + newCoords[1][1]) / 2))
+        else:
+            self.stylusCoords = None
 
         outputFrame = screenspace.addScreenspaceOverlay(outputFrame, self.screenspaceCorners, self.debug)
 

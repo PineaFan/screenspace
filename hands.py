@@ -22,12 +22,12 @@ class Fist(HandModel):
 
 class Spread(HandModel):
     def __init__(self):
-        super().__init__([True, True, True, True, True])
+        super().__init__([False, True, True, True, True])  # Thumb is always false
 
 
 class Peace(HandModel):
     def __init__(self):
-        super().__init__([True, False, False, False, False])
+        super().__init__([False, True, True, False, False])
 
 
 class IndexFinger(HandModel):
