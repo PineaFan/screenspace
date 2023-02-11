@@ -62,9 +62,9 @@ class Driver:
         centerWarpMatrix = manipulation.generateWarpMatrix(frame, self.screenspaceCorners)
         self.screenspaceCenter = manipulation.findNewCoordinate((centerX, centerY), centerWarpMatrix)
         if len(self.videospaceStylusCoords):
-            newCoords = [manipulation.findNewCoordinate(c, self.warpMatrix) for c in self.videospaceStylusCoords]
+            newCoords = [manipulation.findNewCoordinate(c, self.inverseMatrix) for c in self.videospaceStylusCoords]
             # Find the midpoint
-            self.stylusCoords = (round((newCoords[0][0] + newCoords[1][0]) / 2), round((newCoords[0][1] + newCoords[1][1]) / 2))
+            self.stylusCoords = round((newCoords[0][0] + newCoords[1][0]) / 2), round((newCoords[0][1] + newCoords[1][1]) / 2)
         else:
             self.stylusCoords = None
 
