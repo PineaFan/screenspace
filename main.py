@@ -1,6 +1,6 @@
 # import body
+import sys
 import cv2
-import hands
 import numpy as np
 from driver import Driver
 from hands import (Fist, HandModel, IndexFinger, MiddleFinger, Peace,
@@ -11,19 +11,22 @@ height = 150
 scale = 2
 width, height = width * scale, height * scale
 
-driver = Driver(debug=False, modules=["hands"], flip_horizontal=False, flip_vertical=False)
+driver = Driver(debug=True, modules=["hands"],
+                flip_horizontal=True, flip_vertical=False)
 # Create a default background
-background = np.zeros((height, width, 3), np.uint8)  # 300 wide, 150 high, 3 channels (RGB).
+# 300 wide, 150 high, 3 channels (RGB).
+background = np.zeros((height, width, 3), np.uint8)
 # Translucency is not supported due to masking issues
 # Black is for transparent
-background[:] = driver.hex_to_bgr("#FFFFFF")
+# background[:] = driver.hex_to_bgr("#FFFFFF")
 # background[:] = driver.hex_to_bgr("#F27878")
-# background[:] = driver.hex_to_bgr("#000000")
+background[:] = driver.hex_to_bgr("#000000")
 
 currentDrawing = np.zeros((height, width, 3), np.uint8)
 currentDrawing[:] = [255, 255, 255]
 
 debug = False
+
 
 class Colours:
     on: tuple = (0, 255, 0)
@@ -40,11 +43,13 @@ while True:
     mask = cv2.inRange(currentDrawing, (254, 254, 254), (255, 255, 255))
     # Then overlay everything else. If the mask is white, the pixel is not drawn, otherwise it is in the correct color
     for i in range(3):
-        frame[:, :, i] = np.where(mask == 255, frame[:, :, i], currentDrawing[:, :, i])
+        frame[:, :, i] = np.where(
+            mask == 255, frame[:, :, i], currentDrawing[:, :, i])
 
     driver.calculate(background.shape[1], background.shape[0])
     if driver.stylusCoords is not None:
-        cv2.circle(currentDrawing if driver.stylusDraw else frame, (round(driver.stylusCoords[0]), round(driver.stylusCoords[1])), 3, (255, 0, 255), -1)
+        cv2.circle(currentDrawing if driver.stylusDraw else frame, (round(
+            driver.stylusCoords[0]), round(driver.stylusCoords[1])), 3, (255, 0, 255), -1)
     elif driver.screenspaceHandPoints:  # When hands are detected
         toRender = [4, 8, 12, 16, 20]
         # If there are more hands in the list of previously stored ones than there are hands detected, remove the extra ones
@@ -61,10 +66,12 @@ while True:
             # Draw each point on the video
             for index, i in enumerate([n for n in toRender if n < len(hand)]):
                 point = hand[i]
-                cv2.circle(frame, (round(point[0]), round(point[1])), 3, Colours.on if driver.raisedFingers[handID][index] > 0 else Colours.off, -1)
+                cv2.circle(frame, (round(point[0]), round(
+                    point[1])), 3, Colours.on if driver.raisedFingers[handID][index] > 0 else Colours.off, -1)
             # Create a list of booleans by checking if the dot product of the finger and the palm is greater than 0
             booleans = [n > 0 for n in driver.raisedFingers[handID]]
-            if previousHands[handID][:5] != booleans:  # If the fingers are different, reset the time visible
+            # If the fingers are different, reset the time visible
+            if previousHands[handID][:5] != booleans:
                 previousHands[handID] = booleans + [0]
             else:  # Otherwise add to the time visible
                 previousHands[handID][-1] += 1
@@ -77,15 +84,17 @@ while True:
     #     frame = body.renderBody(frame, driver.bodyCoordinates)
     if any([n == MiddleFinger() for n in knownHands]):
         print("\033[91mMiddle finger detected, exiting")
-        import sys
         sys.exit()
     for hand in knownHands:
         if hand == IndexFinger():
             if len(driver.screenspaceHandPoints) > knownHands.index(hand):
                 cv2.circle(currentDrawing, (
-                        round(driver.screenspaceHandPoints[knownHands.index(hand)][8][0]),
-                        round(driver.screenspaceHandPoints[knownHands.index(hand)][8][1])
-                    ),
+                    # TODO
+                    round(
+                        driver.screenspaceHandPoints[knownHands.index(hand)][8][0]),
+                    round(
+                        driver.screenspaceHandPoints[knownHands.index(hand)][8][1])
+                ),
                     5,
                     driver.hex_to_bgr("#020202"), -1
                 )

@@ -27,6 +27,9 @@ def vectorFrom(p1, p2):
 
 def getScreenspacePoints(frame, videoFrame, debug, previousFullCodes) -> list[tuple[int, int]]:
     # Detect markers in the frame (Aruco 5x5 1000 0-3)
+    newFrame = frame.copy()
+    # Convert to black and white
+    newFrame = cv2.cvtColor(newFrame, cv2.COLOR_BGR2GRAY)
     (corners, ids, rejected) = cv2.aruco.detectMarkers(frame, arucoDict, parameters=arucoParams)
 
     confirmed = []  # Valid markers visible in the frame

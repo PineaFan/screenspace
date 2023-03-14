@@ -10,6 +10,8 @@ class HandModel:
         self.middle = handArray[2]
         self.ring = handArray[3]
         self.pinky = handArray[4]
+        self.name = ""
+        self.value = handArray[0:5]
 
     def __eq__(self, other):
         return self.thumb == other.thumb and self.index == other.index and self.middle == other.middle and self.ring == other.ring and self.pinky == other.pinky
@@ -18,36 +20,50 @@ class HandModel:
 class Fist(HandModel):
     def __init__(self):
         super().__init__([False, False, False, False, False])
+        self.name = "fist"
 
 
 class Spread(HandModel):
     def __init__(self):
         super().__init__([False, True, True, True, True])  # Thumb is always false
+        self.name = "spread"
 
 
 class Peace(HandModel):
     def __init__(self):
         super().__init__([False, True, True, False, False])
+        self.name = "peace"
 
 
 class IndexFinger(HandModel):
     def __init__(self):
         super().__init__([False, True, False, False, False])
+        self.name = "index"
 
 
 class MiddleFinger(HandModel):
     def __init__(self):
         super().__init__([False, False, True, False, False])
+        self.name = "middle"
 
 
 class RingFinger(HandModel):
     def __init__(self):
         super().__init__([False, False, False, True, False])
+        self.name = "ring"
 
 
 class PinkyFinger(HandModel):
     def __init__(self):
         super().__init__([False, False, False, False, True])
+        self.name = "pinky"
+
+
+def handToName(arr: list[bool]):
+    for handType in [Fist(), Spread(), Peace(), IndexFinger(), MiddleFinger(), RingFinger(), PinkyFinger()]:
+        if arr == handType.value:
+            return handType.name
+    return "unknown"
 
 
 mpHands = mp.solutions.hands
