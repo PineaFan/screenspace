@@ -12,7 +12,7 @@ scale = 2
 width, height = width * scale, height * scale
 
 driver = Driver(debug=False, modules=["hands"],
-                flip_horizontal=True, flip_vertical=False)
+                flip_horizontal=False, flip_vertical=False)
 
 
 class Colours:
@@ -110,14 +110,12 @@ while True:
                 # If it has been visible for more than 5 frames, it is now known
                 knownHands[handIndex] = HandModel(previousHands[handIndex][:5])
         # Remove extra hands
-        knownHands = knownHands[:highestHandIndex + 1]
+        knownHands = knownHands[:highestHandIndex]
 
     currentAction = []
     for hand in knownHands:
         if hand is not None:
             currentAction.append(actions.get(handToName(hand.value[:5]), None))
-        else:
-            currentAction.append(None)
     print(currentAction)
     if "quit" in currentAction:
         break
@@ -134,6 +132,11 @@ while True:
             cv2.imshow("currentDrawing", currentDrawing)
         if "erase" in currentAction and len(driver.screenspaceHandPoints) > knownHands.index(hand):
             focusAbout = [0, 8, 20]
+            # Avoid list index out of range errors
+            for i in range(len(focusAbout)):
+                if focusAbout[i] >= len(driver.screenspaceHandPoints[knownHands.index(hand)]):
+                    focusAbout[i] = len(driver.screenspaceHandPoints[knownHands.index(hand)]) - 1
+
             focus = (
                 (driver.screenspaceHandPoints[knownHands.index(hand)][focusAbout[0]][0] + driver.screenspaceHandPoints[knownHands.index(hand)][focusAbout[1]][0] + driver.screenspaceHandPoints[knownHands.index(hand)][focusAbout[2]][0]) / 3,
                 (driver.screenspaceHandPoints[knownHands.index(hand)][focusAbout[0]][1] + driver.screenspaceHandPoints[knownHands.index(hand)][focusAbout[1]][1] + driver.screenspaceHandPoints[knownHands.index(hand)][focusAbout[2]][1]) / 3
@@ -146,8 +149,14 @@ while True:
             cv2.circle(currentMotion, focus, 20, Colours.magenta, -1)
             cv2.circle(currentMotion, focus, 18, Colours.transparent, -1)
 
+    # Create a mask from the currentMotion, where all non black pixels become white
     mask = cv2.inRange(currentMotion, Colours.transparent, Colours.transparent)
-    currentFrame = cv2.add(currentFrame, currentMotion, mask=mask)
+    # Apply the mask to the currentFrame, so white pixels on the mask make the currentFrame black
+    currentFrame = cv2.bitwise_and(currentFrame, currentFrame, mask=mask)
+
+    for i in range(3):
+        currentFrame[:, :, i] = np.where(
+            currentMotion[:, :, i] == 0, currentFrame[:, :, i], currentMotion[:, :, i])
 
     cv2.imshow("currentMotion", currentMotion)
     cv2.imshow("currentFrame", currentFrame)

@@ -70,8 +70,8 @@ mpHands = mp.solutions.hands
 hands = mpHands.Hands(
     static_image_mode=False,
     max_num_hands=4,
-    min_detection_confidence=0.3,
-    min_tracking_confidence=0.1
+    min_detection_confidence=0.5,
+    min_tracking_confidence=0.3
 )
 mpDraw = mp.solutions.drawing_utils
 
