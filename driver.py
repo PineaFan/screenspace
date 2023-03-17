@@ -40,6 +40,9 @@ class Driver:
 
         self.previousFullCodes = [x for x in screenspace.defaultFullCodes]
 
+        self.visibility = "Calibration"  # Calibration, Correcting, Accurate
+        self.visibilityTime = 1000
+
     def hex_to_bgr(self, hex):
         hex = hex.lstrip('#')
         hlen = len(hex)
@@ -49,7 +52,12 @@ class Driver:
         frame = screenspace.getCurrentFrame()
         self.cameraFrame = frame.copy()
         dimensions = manipulation.createImageWithDimensions(width, height)
-        self.screenspaceCorners, outputFrame, self.previousFullCodes, self.videospaceStylusCoords, self.stylusDraw = screenspace.getScreenspacePoints(frame, frame, self.debug, self.previousFullCodes)
+        self.screenspaceCorners, outputFrame, self.previousFullCodes, self.videospaceStylusCoords, self.stylusDraw, visibility = screenspace.getScreenspacePoints(frame, frame, self.debug, self.previousFullCodes)
+        if visibility != self.visibility:
+            self.visibility = visibility
+            self.visibilityTime = 0
+        else:
+            self.visibilityTime += 1
         self.screenspaceMidpoints, outputFrame = screenspace.getMidpoints(self.screenspaceCorners, frame, self.debug)
         self.warpMatrix = manipulation.generateWarpMatrix(dimensions, self.screenspaceCorners)
 
@@ -96,9 +104,10 @@ class Driver:
         self.currentFrame = outputFrame
 
 
-    def render(self, frame):
+    def render(self, frame, overlay = None):
         outputFrame = self.currentFrame.copy()
-        outputFrame = manipulation.overlayImage(outputFrame, frame, self.warpMatrix)
+        if self.visibilityTime < 1_000:
+            outputFrame = manipulation.overlayImage(outputFrame, frame, self.warpMatrix)
         # Resize to 1000 width, keeping aspect ratio
         outputFrame = cv2.resize(outputFrame, (1000, round(1000 * outputFrame.shape[0] / outputFrame.shape[1])))
 
@@ -108,6 +117,19 @@ class Driver:
         # Flip the frame vertically
         if self.flip_vertical:
             outputFrame = cv2.flip(outputFrame, 0)
+        if overlay is not None:
+            # Make overlay the same size as the output frame
+            overlay = cv2.resize(overlay, (outputFrame.shape[1], outputFrame.shape[0]))
+            # Create a mask of the overlay. Black pixels should be ignored
+            mask = cv2.cvtColor(overlay, cv2.COLOR_BGR2GRAY)
+            mask = cv2.threshold(mask, 1, 255, cv2.THRESH_BINARY)[1]
+            # Make all coloured areas of the mask completely black on the main frame
+            outputFrame = cv2.bitwise_and(outputFrame, outputFrame, mask=cv2.bitwise_not(mask))
+            # Make transparent areas of the overlay completely black
+            overlay = cv2.bitwise_and(overlay, overlay, mask=mask)
+            # For each channel, add the overlay to the main frame (where the mask is not black)
+            for i in range(3):
+                outputFrame[:, :, i] = outputFrame[:, :, i] + overlay[:, :, i]
         cv2.waitKey(1)
         cv2.imshow("Output", outputFrame)
 

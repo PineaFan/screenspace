@@ -55,6 +55,12 @@ currentPath = []
 
 previousHands, knownHands = [], []
 
+statuses = {
+    "Calibration": [Colours.red, "No codes found, try moving around", 20],
+    "Correcting": [Colours.yellow, "Some codes hidden, attempting to correct", 20],
+    "Accurate": [Colours.green, "", 5]
+}
+
 while True:
     currentFrame = background.copy()
 
@@ -116,7 +122,6 @@ while True:
     for hand in knownHands:
         if hand is not None:
             currentAction.append(actions.get(handToName(hand.value[:5]), None))
-    print(currentAction)
     if "quit" in currentAction:
         break
     for handIndex, hand in enumerate(knownHands):
@@ -158,9 +163,23 @@ while True:
         currentFrame[:, :, i] = np.where(
             currentMotion[:, :, i] == 0, currentFrame[:, :, i], currentMotion[:, :, i])
 
-    cv2.imshow("currentMotion", currentMotion)
-    cv2.imshow("currentFrame", currentFrame)
-    cv2.imshow("background", background)
+    # Create a transparent image, with a red rectangle at the top
+
+    # cv2.imshow("currentMotion", currentMotion)
+    # cv2.imshow("currentFrame", currentFrame)
+    # cv2.imshow("background", background)
     currentMotion[:] = Colours.transparent
+
+    # currentOverlay = np.zeros((driver.cameraFrame.shape[0], driver.cameraFrame.shape[1], 3), np.uint8)
+    # currentOverlay[:] = Colours.transparent
+
+    # status = driver.visibility
+    # if status == "Calibrating" and driver.visibilityTime < 50:
+    #     status = "Correcting"
+    # print(status)
+    # status = statuses[status]
+    # cv2.rectangle(currentOverlay, (0, 0), (currentOverlay.shape[1], status[2]), status[0], -1)
+    # # Add text to the overlay, 20px high and white
+    # cv2.putText(currentOverlay, status[1], (20, 15), cv2.FONT_HERSHEY_SIMPLEX, 0.5, Colours.white, 1, cv2.LINE_AA)
 
     driver.render(currentFrame)

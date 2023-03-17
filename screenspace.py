@@ -28,8 +28,9 @@ def vectorFrom(p1, p2):
 def getScreenspacePoints(frame, videoFrame, debug, previousFullCodes) -> list[tuple[int, int]]:
     # Detect markers in the frame (Aruco 5x5 1000 0-3)
     newFrame = frame.copy()
-    # Convert to black and white
+    # Convert to greyscale
     newFrame = cv2.cvtColor(newFrame, cv2.COLOR_BGR2GRAY)
+    newFrame = cv2.threshold(newFrame, 127, 255, cv2.THRESH_BINARY)[1]
     (corners, ids, rejected) = cv2.aruco.detectMarkers(frame, arucoDict, parameters=arucoParams)
 
     confirmed = []  # Valid markers visible in the frame
@@ -37,6 +38,7 @@ def getScreenspacePoints(frame, videoFrame, debug, previousFullCodes) -> list[tu
     fullCodes = [x.copy() for x in defaultFullCodes]
     stylusOn = None
     stylusCorners = []
+    stage = "Calibration"
 
     for listID, corner in enumerate(corners[:6]):
         for point in corner:  # for each corner in the list of markers
@@ -57,7 +59,10 @@ def getScreenspacePoints(frame, videoFrame, debug, previousFullCodes) -> list[tu
                         screenspaceCorners[index] = (x, y)  # Save it for future frames (used if the marker is lost)
                         confirmed.append(index)
                     index += 1
-
+    if len(confirmed) == 3:
+        stage = "Correcting"
+    elif len(confirmed) == 4:
+        stage = "Accurate"
     if len(confirmed) == 3 and previousFullCodes != defaultFullCodes and debug:
         (unknownPoint,) = {0, 1, 2, 3} - set(confirmed)
         # Create a matrix that transforms the previous points to the current points
@@ -70,7 +75,7 @@ def getScreenspacePoints(frame, videoFrame, debug, previousFullCodes) -> list[tu
             new.append([max(round(n, 1), 0) for n in list(transformMatrix @ np.array([point[0], point[1], 1]))])
         screenspaceCorners[unknownPoint] = new[unknownPoint]
 
-    return screenspaceCorners, videoFrame, fullCodes, stylusCorners, stylusOn
+    return screenspaceCorners, videoFrame, fullCodes, stylusCorners, stylusOn, stage
 
 
 def addScreenspaceOverlay(frame, screenspaceCorners, debug=False):
