@@ -16,12 +16,12 @@ driver = Driver(debug=False, modules=["hands"],
 
 
 class Colours:
-    red: tuple = driver.hex_to_bgr("#FF0000")
-    green: tuple = driver.hex_to_bgr("#00FF00")
-    blue: tuple = driver.hex_to_bgr("#0000FF")
-    yellow: tuple = driver.hex_to_bgr("#FFFF00")
-    cyan: tuple = driver.hex_to_bgr("#00FFFF")
-    magenta: tuple = driver.hex_to_bgr("#FF00FF")
+    red: tuple = driver.hex_to_bgr("#F27878")
+    green: tuple = driver.hex_to_bgr("#A1CC65")
+    blue: tuple = driver.hex_to_bgr("#6576CC")
+    yellow: tuple = driver.hex_to_bgr("#E6DC71")
+    cyan: tuple = driver.hex_to_bgr("#71AEF5")
+    magenta: tuple = driver.hex_to_bgr("#A358B3")
     white: tuple = driver.hex_to_bgr("#FFFFFF")
     black: tuple = driver.hex_to_bgr("#020202")
     transparent: tuple = driver.hex_to_bgr("#000000")
@@ -61,8 +61,13 @@ statuses = {
     "Accurate": [Colours.green, "", 5]
 }
 
+currentOverlay = None
+lastVisibility = False
+
 while True:
     currentFrame = background.copy()
+    if currentOverlay is None and driver.cameraFrame is not None:
+        currentOverlay = np.zeros((driver.cameraFrame.shape[0], driver.cameraFrame.shape[1], 3), np.uint8)
 
     # Preprocessing
     # Overlay the current drawing. Use black areas as a mask
@@ -163,23 +168,18 @@ while True:
         currentFrame[:, :, i] = np.where(
             currentMotion[:, :, i] == 0, currentFrame[:, :, i], currentMotion[:, :, i])
 
-    # Create a transparent image, with a red rectangle at the top
-
-    # cv2.imshow("currentMotion", currentMotion)
-    # cv2.imshow("currentFrame", currentFrame)
-    # cv2.imshow("background", background)
     currentMotion[:] = Colours.transparent
 
-    # currentOverlay = np.zeros((driver.cameraFrame.shape[0], driver.cameraFrame.shape[1], 3), np.uint8)
-    # currentOverlay[:] = Colours.transparent
+    # Only update when the status has been the same for 10 frames
+    if ((driver.visibilityTime > 3 and driver.visibility != lastVisibility) or driver.visibilityTime > 10) and currentOverlay is not None:
+        lastVisibility = driver.visibility
+        statusName = driver.visibility
+        status = statuses[statusName]
+        if statusName == "Accurate":
+            currentOverlay[:, :, :] = Colours.transparent
+        cv2.rectangle(currentOverlay, (0, 0), (currentOverlay.shape[1], status[2]), status[0], -1)
+        # Add text to the overlay, 20px high and white
+        cv2.putText(currentOverlay, status[1], (20, 15), cv2.FONT_HERSHEY_SIMPLEX, 0.5, Colours.white, 1, cv2.LINE_AA)
+        cv2.imshow("currentOverlay", currentOverlay)
 
-    # status = driver.visibility
-    # if status == "Calibrating" and driver.visibilityTime < 50:
-    #     status = "Correcting"
-    # print(status)
-    # status = statuses[status]
-    # cv2.rectangle(currentOverlay, (0, 0), (currentOverlay.shape[1], status[2]), status[0], -1)
-    # # Add text to the overlay, 20px high and white
-    # cv2.putText(currentOverlay, status[1], (20, 15), cv2.FONT_HERSHEY_SIMPLEX, 0.5, Colours.white, 1, cv2.LINE_AA)
-
-    driver.render(currentFrame)
+    driver.render(currentFrame, currentOverlay)
